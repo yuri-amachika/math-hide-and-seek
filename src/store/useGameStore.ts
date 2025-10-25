@@ -170,13 +170,14 @@ const store: StateCreator<GameStoreState, [], []> = (
         nextHintLevel = (incremented > 3 ? 3 : incremented) as HintLevel;
       }
 
+      // 正解時はactiveCellIdとcurrentProblemをクリア、誤答時はisLockedをtrueのままに
       return {
         ...prev,
         cells: nextCells,
         completedCells: result === 'correct' ? prev.completedCells + 1 : prev.completedCells,
-        activeCellId: null,
-        currentProblem: null,
-        isLocked: false,
+        activeCellId: result === 'correct' ? null : activeCellId,
+        currentProblem: result === 'correct' ? null : prev.currentProblem,
+        isLocked: result === 'incorrect' ? true : false,
         lastResult: result,
         phase: result === 'correct' ? 'resolving' : 'feedback',
         stageProgress: nextStageProgress,

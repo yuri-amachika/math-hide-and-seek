@@ -6,9 +6,11 @@ import { QuestionOverlay } from './components/QuestionOverlay';
 import { HudPanel } from './components/HudPanel';
 import { SessionWarning } from './components/SessionWarning';
 import { GameClearModal } from './components/GameClearModal';
+import { MonsterSelectionModal } from './components/MonsterSelectionModal';
 import { useGameStore, type GameStoreState } from './store/useGameStore';
 import { useFeedbackSounds } from './hooks/useFeedbackSounds';
 import type { GridCell } from './types/game';
+import type { MonsterOption } from './config/gameAssets';
 
 const DEFAULT_MONSTER_CELL = 8;
 
@@ -37,6 +39,7 @@ function App() {
   const [overlayVisible, setOverlayVisible] = useState(false);
   const [sessionWarningVisible, setSessionWarningVisible] = useState(false);
   const [gameClearVisible, setGameClearVisible] = useState(false);
+  const [selectedMonster, setSelectedMonster] = useState<MonsterOption | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -112,38 +115,55 @@ function App() {
     setGameClearVisible(false);
   };
 
+  const handleMonsterSelect = (monster: MonsterOption) => {
+    setSelectedMonster(monster);
+  };
+
   const elapsed = game.getSessionElapsed();
   const remaining = Math.max(0, game.sessionDuration - elapsed);
   const remainingMinutes = Math.floor(remaining / 60000);
 
   return (
     <div className="app-shell">
-      <div className="map-stage">
-        <NumberGrid cells={game.cells} isLocked={game.isLocked} onSelect={handleCellSelect} />
-        <MonsterSprite cells={game.cells} targetCellId={monsterDestination} onArrive={handleMonsterArrive} />
-      </div>
-      <HudPanel totalCells={totalCells} />
-      <AnimatePresence>
-        <QuestionOverlay
-          problem={game.currentProblem}
-          visible={overlayVisible && !!game.currentProblem}
-          onSubmit={handleSubmit}
-          onClose={handleClose}
-          hintLevel={game.hintLevel}
-        />
-      </AnimatePresence>
-      <SessionWarning
-        visible={sessionWarningVisible}
-        remainingMinutes={remainingMinutes}
-        onContinue={handleSessionContinue}
-        onClose={handleSessionClose}
+      <MonsterSelectionModal
+        visible={!selectedMonster}
+        onSelect={handleMonsterSelect}
       />
-      <GameClearModal
-        visible={gameClearVisible}
-        totalCells={totalCells}
-        onClose={handleGameClearClose}
-        onPlayClearSound={playGameClear}
-      />
+      {selectedMonster && (
+        <>
+          <div className="map-stage">
+            <NumberGrid cells={game.cells} isLocked={game.isLocked} onSelect={handleCellSelect} />
+            <MonsterSprite 
+              cells={game.cells} 
+              targetCellId={monsterDestination} 
+              onArrive={handleMonsterArrive}
+              selectedMonster={selectedMonster}
+            />
+          </div>
+          <HudPanel totalCells={totalCells} />
+          <AnimatePresence>
+            <QuestionOverlay
+              problem={game.currentProblem}
+              visible={overlayVisible && !!game.currentProblem}
+              onSubmit={handleSubmit}
+              onClose={handleClose}
+              hintLevel={game.hintLevel}
+            />
+          </AnimatePresence>
+          <SessionWarning
+            visible={sessionWarningVisible}
+            remainingMinutes={remainingMinutes}
+            onContinue={handleSessionContinue}
+            onClose={handleSessionClose}
+          />
+          <GameClearModal
+            visible={gameClearVisible}
+            totalCells={totalCells}
+            onClose={handleGameClearClose}
+            onPlayClearSound={playGameClear}
+          />
+        </>
+      )}
     </div>
   );
 }

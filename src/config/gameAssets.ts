@@ -3,22 +3,60 @@
  * 怪物の画像や音声ファイルのパスを一元管理
  */
 
-export const gameAssets = {
-  // 怪物画像の設定
-  monster: {
-    // 画像パス（public/配下のパスを指定）
-    // nullの場合は絵文字フォールバック（👾）を使用
-    imagePath: './assets/monsters/generated-image_02.png',
-    // フォールバック絵文字
-    fallbackEmoji: '👾',
-    // 画像の説明（アクセシビリティ用）
-    altText: 'かいぶつ'
-  },
+export interface MonsterOption {
+  id: string;
+  name: string;
+  imagePath: string | null;
+  fallbackEmoji: string;
+  altText: string;
+}
 
-  // サウンドエフェクトの設定
+export const gameAssets = {
+  // 怪物画像の設定（複数指定可能）
+  monsters: [
+    {
+      id: 'monster-1',
+      name: 'バンパイア',
+      imagePath: './assets/monsters/generated-image_02.png',
+      fallbackEmoji: '👾',
+      altText: 'バンパイア'
+    },
+    {
+      id: 'monster-2',
+      name: 'オニ',
+      imagePath: './assets/monsters/generated-image_03.png', // 画像がない場合はフォールバック絵文字を使用
+      fallbackEmoji: '�',
+      altText: 'オニ'
+    },
+    {
+      id: 'monster-3',
+      name: 'ゾンビ',
+      imagePath: './assets/monsters/generated-image_04.png',
+      fallbackEmoji: '🦖',
+      altText: 'ゾンビ'
+    },
+    {
+      id: 'monster-4',
+      name: 'しにがみ',
+      imagePath: './assets/monsters/generated-image.png',
+      fallbackEmoji: '🦖',
+      altText: 'しにがみ'
+    }
+  ] as MonsterOption[],
+
+  // サウンドエフェクトの設定（複数指定可能）
   sounds: {
-    // 正解時のSE（オプション）
-    success: './assets/sounds/correctSE.mp3',
+    // 正解時のSE（複数指定可能、ランダムに再生される）
+    success: [
+      './assets/sounds/correctSE.mp3',
+      './assets/sounds/correctSE_02.mp3',
+      './assets/sounds/correctSE_03.mp3',
+      './assets/sounds/correctSE_04.mp3',
+      './assets/sounds/correctSE_05.mp3'
+      // 追加の正解SEをここに記述
+      // './assets/sounds/correct2.mp3',
+      // './assets/sounds/correct3.mp3'
+    ],
     // 不正解時のSE（オプション）
     error: './assets/sounds/safeSE.mp3',
     // ゲームクリア時のSE（オプション）
@@ -29,9 +67,17 @@ export const gameAssets = {
 /**
  * 使用例:
  * 
- * 画像を使用する場合:
- * monster.imagePath = '/assets/monsters/default.png'
+ * 怪物を追加する場合:
+ * monsters配列に新しいオブジェクトを追加
+ * {
+ *   id: 'monster-4',
+ *   name: 'きいろのかいぶつ',
+ *   imagePath: './assets/monsters/yellow.png',
+ *   fallbackEmoji: '⭐',
+ *   altText: 'きいろのかいぶつ'
+ * }
  * 
- * 正解SEを使用する場合:
- * sounds.success = '/assets/sounds/correct.mp3'
+ * 正解SEを追加する場合:
+ * sounds.success配列に新しいパスを追加
+ * './assets/sounds/correct2.mp3'
  */

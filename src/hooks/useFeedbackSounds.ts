@@ -43,9 +43,11 @@ export const useFeedbackSounds = () => {
   }, []);
 
   const playSuccess = useCallback(() => {
-    // カスタムSEが設定されている場合はそれを使用
-    if (gameAssets.sounds.success) {
-      playAudioFile(gameAssets.sounds.success);
+    // カスタムSEが設定されている場合はランダムに選択して再生
+    if (gameAssets.sounds.success && gameAssets.sounds.success.length > 0) {
+      const randomIndex = Math.floor(Math.random() * gameAssets.sounds.success.length);
+      const selectedSound = gameAssets.sounds.success[randomIndex];
+      playAudioFile(selectedSound);
       return;
     }
     // フォールバック：ビープ音
