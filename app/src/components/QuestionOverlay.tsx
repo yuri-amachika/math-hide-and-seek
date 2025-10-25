@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Problem } from '../types/game';
+import { HintLevel, Problem } from '../types/game';
 import { ProblemVisualizer } from './ProblemVisualizer';
 
 interface QuestionOverlayProps {
@@ -8,6 +8,7 @@ interface QuestionOverlayProps {
   visible: boolean;
   onSubmit: (isCorrect: boolean) => void;
   onClose: () => void;
+  hintLevel: HintLevel;
 }
 
 type TokenAssignment = 'left' | 'right';
@@ -27,7 +28,7 @@ const buildInitialTokens = (problem: Problem | null): TokenAssignment[] => {
   return Array.from({ length: total }).map(() => 'left');
 };
 
-export const QuestionOverlay = ({ problem, visible, onSubmit, onClose }: QuestionOverlayProps) => {
+export const QuestionOverlay = ({ problem, visible, onSubmit, onClose, hintLevel }: QuestionOverlayProps) => {
   const [answer, setAnswer] = useState('');
   const [tokens, setTokens] = useState<TokenAssignment[]>(() => buildInitialTokens(problem));
 
@@ -42,6 +43,15 @@ export const QuestionOverlay = ({ problem, visible, onSubmit, onClose }: Questio
   );
 
   const expectedAnswer = problem?.kind === 'decomposition' ? rightCount : Number(answer || 0);
+
+  const showVisual = useMemo(() => {
+    if (!problem?.visual) return false;
+    return hintLevel >= 2;
+  }, [problem?.visual, hintLevel]);
+
+  const showSecondaryPrompt = useMemo(() => {
+    return hintLevel >= 3;
+  }, [hintLevel]);
 
   const handleDigitPress = (value: string) => {
     setAnswer((prev: string) => {
@@ -101,12 +111,16 @@ export const QuestionOverlay = ({ problem, visible, onSubmit, onClose }: Questio
           <motion.div className="overlay-card" variants={overlayVariants} initial="hidden" animate="visible" exit="hidden">
             <div className="overlay-heading">{problem.prompt}</div>
             <div className="overlay-subtext">{problem.question}</div>
-            {problem.secondaryPrompt && <div className="story-note">{problem.secondaryPrompt}</div>}
+            {showSecondaryPrompt && problem.secondaryPrompt && <div className="story-note">{problem.secondaryPrompt}</div>}
 
-            {problem.visual && (
+            {showVisual && problem.visual && (
               <div className="overlay-visual">
                 <ProblemVisualizer problem={problem} />
               </div>
+            )}
+
+            {!showVisual && hintLevel === 1 && (
+              <div className="hint-message">もんだいをよくよんで、かんがえてみよう。</div>
             )}
 
             <div className="story-note">{instruction}</div>

@@ -12,14 +12,27 @@ const stepLabels: Record<string, string> = {
   C: 'すてっぷC くりさがりとぶんしょうだい'
 };
 
+const formatTime = (ms: number): string => {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
 export const HudPanel = ({ totalCells }: HudPanelProps) => {
-  const { completedCells, stageStep, lastResult, stageProgress, phase } = useGameStore((state: GameStoreState) => ({
+  const { completedCells, stageStep, lastResult, stageProgress, phase, hintLevel, getSessionElapsed, sessionDuration } = useGameStore((state: GameStoreState) => ({
     completedCells: state.completedCells,
     stageStep: state.stageStep,
     lastResult: state.lastResult,
     stageProgress: state.stageProgress,
-    phase: state.phase
+    phase: state.phase,
+    hintLevel: state.hintLevel,
+    getSessionElapsed: state.getSessionElapsed,
+    sessionDuration: state.sessionDuration
   }));
+
+  const elapsed = getSessionElapsed();
+  const remaining = Math.max(0, sessionDuration - elapsed);
+  const remainingFormatted = formatTime(remaining);
 
   const progress = useMemo(() => {
     if (totalCells === 0) {
@@ -67,9 +80,15 @@ export const HudPanel = ({ totalCells }: HudPanelProps) => {
         </div>
         <div className="answer-display">{completedCells}/{totalCells}</div>
       </div>
+      <div className="session-timer" aria-live="polite">
+        ⏱️ のこり: {remainingFormatted}
+      </div>
       <div className="phase-banner" aria-live="polite">
         <span className={`phase-pill phase-${phase}`}>{phase.toUpperCase()}</span>
         <span>{phaseMessage}</span>
+        {phase === 'solving' && hintLevel > 1 && (
+          <span className="hint-indicator"> ヒントレベル: {hintLevel}/3</span>
+        )}
       </div>
       <div className="progress-bar" aria-hidden="true">
         <div className="progress-fill" style={{ width: `${progress}%` }} />

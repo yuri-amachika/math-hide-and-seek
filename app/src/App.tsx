@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { NumberGrid } from './components/NumberGrid';
 import { MonsterSprite } from './components/MonsterSprite';
 import { QuestionOverlay } from './components/QuestionOverlay';
 import { HudPanel } from './components/HudPanel';
+import { SessionWarning } from './components/SessionWarning';
 import { useGameStore, type GameStoreState } from './store/useGameStore';
 import { useFeedbackSounds } from './hooks/useFeedbackSounds';
 import type { GridCell } from './types/game';
@@ -18,7 +19,11 @@ const selectGameSlice = (state: GameStoreState) => ({
   markResult: state.markResult,
   selectCell: state.selectCell,
   resetActive: state.resetActive,
-  beginSolving: state.beginSolving
+  beginSolving: state.beginSolving,
+  hintLevel: state.hintLevel,
+  isSessionExpired: state.isSessionExpired,
+  getSessionElapsed: state.getSessionElapsed,
+  sessionDuration: state.sessionDuration
 });
 
 const totalCellsSelector = (state: GameStoreState) => state.cells.length;
@@ -29,6 +34,23 @@ function App() {
   const { playSuccess, playError } = useFeedbackSounds();
   const [monsterTargetId, setMonsterTargetId] = useState<number>(DEFAULT_MONSTER_CELL);
   const [overlayVisible, setOverlayVisible] = useState(false);
+  const [sessionWarningVisible, setSessionWarningVisible] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const elapsed = game.getSessionElapsed();
+      const remaining = game.sessionDuration - elapsed;
+      const remainingMinutes = Math.floor(remaining / 60000);
+      
+      if (remainingMinutes === 5 && !sessionWarningVisible) {
+        setSessionWarningVisible(true);
+      } else if (game.isSessionExpired() && !sessionWarningVisible) {
+        setSessionWarningVisible(true);
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [game, sessionWarningVisible]);
 
   const activeCell = useMemo(() => {
     if (game.activeCellId == null) {
@@ -68,6 +90,18 @@ function App() {
   setMonsterTargetId((prev: number) => prev);
   };
 
+  const handleSessionContinue = () => {
+    setSessionWarningVisible(false);
+  };
+
+  const handleSessionClose = () => {
+    setSessionWarningVisible(false);
+  };
+
+  const elapsed = game.getSessionElapsed();
+  const remaining = Math.max(0, game.sessionDuration - elapsed);
+  const remainingMinutes = Math.floor(remaining / 60000);
+
   return (
     <div className="app-shell">
       <div className="map-stage">
@@ -81,8 +115,15 @@ function App() {
           visible={overlayVisible && !!game.currentProblem}
           onSubmit={handleSubmit}
           onClose={handleClose}
+          hintLevel={game.hintLevel}
         />
       </AnimatePresence>
+      <SessionWarning
+        visible={sessionWarningVisible}
+        remainingMinutes={remainingMinutes}
+        onContinue={handleSessionContinue}
+        onClose={handleSessionClose}
+      />
     </div>
   );
 }

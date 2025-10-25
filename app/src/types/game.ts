@@ -2,6 +2,8 @@ export type StageStep = 'A' | 'B' | 'C';
 
 export type ProblemKind = 'decomposition' | 'addition' | 'subtraction' | 'word';
 
+export type HintLevel = 1 | 2 | 3;
+
 export type NumberLineVisual = {
   type: 'numberLine';
   start: number;

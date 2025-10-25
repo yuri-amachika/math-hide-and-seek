@@ -1,6 +1,6 @@
 import { create, StateCreator, StoreApi } from 'zustand';
 import { createInitialBlueprint } from '../data/problems';
-import { CellStatus, GameStateSnapshot, GridCell, Problem, StageStep } from '../types/game';
+import { CellStatus, GameStateSnapshot, GridCell, HintLevel, Problem, StageStep } from '../types/game';
 
 interface GameStoreState {
   cells: GridCell[];
@@ -13,16 +13,22 @@ interface GameStoreState {
   lastResult: 'correct' | 'incorrect' | null;
   phase: GamePhase;
   stageProgress: StageProgressMap;
+  hintLevel: HintLevel;
+  sessionStartTime: number | null;
+  sessionDuration: number;
   selectCell: (id: number) => void;
   beginSolving: () => void;
   markResult: (result: 'correct' | 'incorrect') => void;
   resetActive: () => void;
   snapshot: () => GameStateSnapshot;
+  getSessionElapsed: () => number;
+  isSessionExpired: () => boolean;
 }
 
 const blueprint = createInitialBlueprint();
 
 const STAGE_SEQUENCE: StageStep[] = ['A', 'B', 'C'];
+const SESSION_LIMIT_MS = 15 * 60 * 1000; // 15 minutes
 
 type GamePhase = 'idle' | 'selecting' | 'solving' | 'resolving' | 'feedback';
 
@@ -80,6 +86,9 @@ const store: StateCreator<GameStoreState, [], []> = (
   lastResult: null,
   phase: 'idle',
   stageProgress: buildInitialStageProgress(),
+  hintLevel: 1,
+  sessionStartTime: Date.now(),
+  sessionDuration: SESSION_LIMIT_MS,
 
   selectCell: (id: number) => {
     const state = get();
@@ -103,7 +112,8 @@ const store: StateCreator<GameStoreState, [], []> = (
         currentProblem: prev.problemMap[target.problemId],
         isLocked: true,
         lastResult: null,
-        phase: 'selecting'
+        phase: 'selecting',
+        hintLevel: 1
       };
     });
   },
@@ -138,6 +148,7 @@ const store: StateCreator<GameStoreState, [], []> = (
 
       let nextStageProgress = prev.stageProgress;
       let nextStageStep = prev.stageStep;
+      let nextHintLevel: HintLevel = 1;
 
       if (result === 'correct' && prev.currentProblem) {
         const problemStep = prev.currentProblem.step;
@@ -154,6 +165,9 @@ const store: StateCreator<GameStoreState, [], []> = (
 
         nextStageProgress = progressSnapshot;
         nextStageStep = determineNextStage(progressSnapshot);
+      } else if (result === 'incorrect') {
+        const incremented = prev.hintLevel + 1;
+        nextHintLevel = (incremented > 3 ? 3 : incremented) as HintLevel;
       }
 
       return {
@@ -166,7 +180,8 @@ const store: StateCreator<GameStoreState, [], []> = (
         lastResult: result,
         phase: result === 'correct' ? 'resolving' : 'feedback',
         stageProgress: nextStageProgress,
-        stageStep: nextStageStep
+        stageStep: nextStageStep,
+        hintLevel: nextHintLevel
       };
     });
   },
@@ -186,7 +201,8 @@ const store: StateCreator<GameStoreState, [], []> = (
         activeCellId: null,
         currentProblem: null,
         isLocked: false,
-        phase: 'idle'
+        phase: 'idle',
+        hintLevel: 1
       };
     });
   },
@@ -199,6 +215,18 @@ const store: StateCreator<GameStoreState, [], []> = (
       stageStep: state.stageStep,
       completedCells: state.completedCells
     };
+  },
+
+  getSessionElapsed: () => {
+    const state = get();
+    if (!state.sessionStartTime) return 0;
+    return Date.now() - state.sessionStartTime;
+  },
+
+  isSessionExpired: () => {
+    const state = get();
+    if (!state.sessionStartTime) return false;
+    return Date.now() - state.sessionStartTime >= state.sessionDuration;
   }
 });
 
