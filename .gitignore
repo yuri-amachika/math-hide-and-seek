@@ -1,0 +1,9 @@
+internal_docs/
+.github/
+node_modules/
+app/dist/
+app/.vite/
+app/.eslintcache
+app/*.tsbuildinfo
+.DS_Store
+Thumbs.db
