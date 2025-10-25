@@ -9,3 +9,13 @@ dist/
 *.tsbuildinfo
 .DS_Store
 Thumbs.db
+
+# TypeScriptコンパイル生成物（Viteが直接TSをトランスパイルするため不要）
+src/**/*.js
+src/**/*.d.ts
+vite.config.js
+vite.config.d.ts
+
+# ただし、プロジェクトルートのJSファイルは除外しない
+!*.config.js
+!vitest.setup.js

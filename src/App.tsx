@@ -5,6 +5,7 @@ import { MonsterSprite } from './components/MonsterSprite';
 import { QuestionOverlay } from './components/QuestionOverlay';
 import { HudPanel } from './components/HudPanel';
 import { SessionWarning } from './components/SessionWarning';
+import { GameClearModal } from './components/GameClearModal';
 import { useGameStore, type GameStoreState } from './store/useGameStore';
 import { useFeedbackSounds } from './hooks/useFeedbackSounds';
 import type { GridCell } from './types/game';
@@ -31,10 +32,11 @@ const totalCellsSelector = (state: GameStoreState) => state.cells.length;
 function App() {
   const game = useGameStore(selectGameSlice);
   const totalCells = useGameStore(totalCellsSelector);
-  const { playSuccess, playError } = useFeedbackSounds();
+  const { playSuccess, playError, playGameClear } = useFeedbackSounds();
   const [monsterTargetId, setMonsterTargetId] = useState<number>(DEFAULT_MONSTER_CELL);
   const [overlayVisible, setOverlayVisible] = useState(false);
   const [sessionWarningVisible, setSessionWarningVisible] = useState(false);
+  const [gameClearVisible, setGameClearVisible] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -76,6 +78,14 @@ function App() {
     if (isCorrect) {
       playSuccess();
       game.markResult('correct');
+      
+      // ゲームクリア判定（全セルクリア）
+      const allSolved = game.cells.every((cell: GridCell) => cell.status === 'solved' || cell.id === game.activeCellId);
+      if (allSolved) {
+        setTimeout(() => {
+          setGameClearVisible(true);
+        }, 500);
+      }
     } else {
       playError();
       game.markResult('incorrect');
@@ -96,6 +106,10 @@ function App() {
 
   const handleSessionClose = () => {
     setSessionWarningVisible(false);
+  };
+
+  const handleGameClearClose = () => {
+    setGameClearVisible(false);
   };
 
   const elapsed = game.getSessionElapsed();
@@ -123,6 +137,12 @@ function App() {
         remainingMinutes={remainingMinutes}
         onContinue={handleSessionContinue}
         onClose={handleSessionClose}
+      />
+      <GameClearModal
+        visible={gameClearVisible}
+        totalCells={totalCells}
+        onClose={handleGameClearClose}
+        onPlayClearSound={playGameClear}
       />
     </div>
   );

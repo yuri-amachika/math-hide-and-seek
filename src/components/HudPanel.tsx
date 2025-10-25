@@ -87,7 +87,7 @@ export const HudPanel = ({ totalCells }: HudPanelProps) => {
         <span className={`phase-pill phase-${phase}`}>{phase.toUpperCase()}</span>
         <span>{phaseMessage}</span>
         {phase === 'solving' && hintLevel > 1 && (
-          <span className="hint-indicator"> ヒントレベル: {hintLevel}/3</span>
+          <span className="hint-indicator"> ひんとれべる: {hintLevel}/3</span>
         )}
       </div>
       <div className="progress-bar" aria-hidden="true">

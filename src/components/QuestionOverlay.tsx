@@ -25,6 +25,11 @@ const buildInitialTokens = (problem: Problem | null): TokenAssignment[] => {
     return [];
   }
   const total = problem.total;
+  // 初期状態は全て左に配置（正解にならないように）
+  // もし正解が0の場合は1つだけ右に配置
+  if (problem.answer === 0) {
+    return Array.from({ length: total }).map((_, i) => (i === 0 ? 'right' : 'left'));
+  }
   return Array.from({ length: total }).map(() => 'left');
 };
 
@@ -160,7 +165,7 @@ export const QuestionOverlay = ({ problem, visible, onSubmit, onClose, hintLevel
                 ⌫
               </button>
               <button type="button" className="answer-button" onClick={handleClear}>
-                クリア
+                くりあ
               </button>
             </div>
 

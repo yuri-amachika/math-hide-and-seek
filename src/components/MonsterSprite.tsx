@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useMemo } from 'react';
 import { GridCell } from '../types/game';
+import { gameAssets } from '../config/gameAssets';
 
 interface MonsterSpriteProps {
   cells: GridCell[];
@@ -26,6 +27,19 @@ export const MonsterSprite = ({ cells, targetCellId, onArrive }: MonsterSpritePr
   const targetCell = useMemo(() => cells.find((cell) => cell.id === targetCellId), [cells, targetCellId]);
   const { top, left } = offsetFor(targetCell);
 
+  const monsterContent = gameAssets.monster.imagePath ? (
+    <img
+      src={gameAssets.monster.imagePath}
+      alt={gameAssets.monster.altText}
+      className="monster-image"
+      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+    />
+  ) : (
+    <span className="monster-face" role="img" aria-label={gameAssets.monster.altText}>
+      {gameAssets.monster.fallbackEmoji}
+    </span>
+  );
+
   return (
     <div className="monster-layer">
       <motion.div
@@ -36,9 +50,7 @@ export const MonsterSprite = ({ cells, targetCellId, onArrive }: MonsterSpritePr
         onAnimationComplete={onArrive}
         style={{ transform: 'translate(-50%, -50%)' }}
       >
-        <span className="monster-face" role="img" aria-label="monster">
-          👾
-        </span>
+        {monsterContent}
       </motion.div>
     </div>
   );

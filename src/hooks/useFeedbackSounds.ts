@@ -1,6 +1,18 @@
 import { useCallback, useRef } from 'react';
+import { gameAssets } from '../config/gameAssets';
 
 const createContext = () => new (window.AudioContext || (window as any).webkitAudioContext)();
+
+/**
+ * 音声ファイルを再生するヘルパー関数
+ */
+const playAudioFile = (path: string) => {
+  const audio = new Audio(path);
+  audio.volume = 0.5; // 音量は50%に設定
+  audio.play().catch((error) => {
+    console.warn('Audio playback failed:', error);
+  });
+};
 
 export const useFeedbackSounds = () => {
   const contextRef = useRef<AudioContext | null>(null);
@@ -31,13 +43,38 @@ export const useFeedbackSounds = () => {
   }, []);
 
   const playSuccess = useCallback(() => {
+    // カスタムSEが設定されている場合はそれを使用
+    if (gameAssets.sounds.success) {
+      playAudioFile(gameAssets.sounds.success);
+      return;
+    }
+    // フォールバック：ビープ音
     playTone(880, 0.35);
     setTimeout(() => playTone(1320, 0.25), 120);
   }, [playTone]);
 
   const playError = useCallback(() => {
+    // カスタムSEが設定されている場合はそれを使用
+    if (gameAssets.sounds.error) {
+      playAudioFile(gameAssets.sounds.error);
+      return;
+    }
+    // フォールバック：ビープ音
     playTone(220, 0.5);
   }, [playTone]);
 
-  return { playSuccess, playError };
+  const playGameClear = useCallback(() => {
+    // ゲームクリアSEが設定されている場合はそれを使用
+    if (gameAssets.sounds.gameClear) {
+      playAudioFile(gameAssets.sounds.gameClear);
+      return;
+    }
+    // フォールバック：勝利のメロディ
+    playTone(523, 0.2); // C
+    setTimeout(() => playTone(659, 0.2), 200); // E
+    setTimeout(() => playTone(784, 0.2), 400); // G
+    setTimeout(() => playTone(1047, 0.5), 600); // C (high)
+  }, [playTone]);
+
+  return { playSuccess, playError, playGameClear };
 };
