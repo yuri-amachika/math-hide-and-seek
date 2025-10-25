@@ -8,7 +8,7 @@ export const gameAssets = {
   monster: {
     // 画像パス（public/配下のパスを指定）
     // nullの場合は絵文字フォールバック（👾）を使用
-    imagePath: './assets/monsters/generated-image.png',
+    imagePath: './assets/monsters/generated-image_02.png',
     // フォールバック絵文字
     fallbackEmoji: '👾',
     // 画像の説明（アクセシビリティ用）

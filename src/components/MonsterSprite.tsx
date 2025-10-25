@@ -9,17 +9,41 @@ interface MonsterSpriteProps {
   onArrive: () => void;
 }
 
-const CELL_SIZE = {
-  width: 1 / 5,
-  height: 1 / 3
+// グリッド設定: 5列×3行
+// .monster-layerは.map-gridと同じサイズに設定済み
+// gapはCSS変数から取得（レスポンシブ対応）
+const GRID_CONFIG = {
+  cols: 5,
+  rows: 3
+};
+
+const getGridGap = (): number => {
+  // CSSから実際のgap値を取得
+  if (typeof window !== 'undefined') {
+    const width = window.innerWidth;
+    if (width <= 400) return 6;
+    if (width <= 640) return 8;
+    if (width <= 960) return 10;
+  }
+  return 12; // デスクトップデフォルト
 };
 
 const offsetFor = (cell: GridCell | undefined) => {
   if (!cell) {
     return { top: '50%', left: '50%' };
   }
-  const left = `${(cell.col + 0.5) * CELL_SIZE.width * 100}%`;
-  const top = `${(cell.row + 0.5) * CELL_SIZE.height * 100}%`;
+  
+  const gap = getGridGap();
+  
+  // セルの実際の幅と高さを計算（gap込み）
+  // グリッドは gap を除いた空間を均等分割する
+  const cellWidth = `(100% - ${gap * (GRID_CONFIG.cols - 1)}px) / ${GRID_CONFIG.cols}`;
+  const cellHeight = `(100% - ${gap * (GRID_CONFIG.rows - 1)}px) / ${GRID_CONFIG.rows}`;
+  
+  // セルの中心位置を計算: (cellSize + gap) * position + cellSize / 2
+  const left = `calc((${cellWidth} + ${gap}px) * ${cell.col} + (${cellWidth}) / 2)`;
+  const top = `calc((${cellHeight} + ${gap}px) * ${cell.row} + (${cellHeight}) / 2)`;
+  
   return { top, left };
 };
 
