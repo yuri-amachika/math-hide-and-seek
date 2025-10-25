@@ -1,7 +1,9 @@
 internal_docs/
-.github/
 node_modules/
 dist/
+.github/instructions/
+.github/memory_bank
+.github/prompts/
 .vite/
 .eslintcache
 *.tsbuildinfo
